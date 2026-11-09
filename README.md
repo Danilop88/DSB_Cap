@@ -1,4 +1,4 @@
-# Quarterly Financial Data: A Simple EDA
+# Quarterly Financial Data: Bussines and financial prediction for 400 NYSE stocks
 
 ## Project overview
 
