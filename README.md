@@ -1,42 +1,76 @@
-# Forecasting Business and Financial Metrics
+# Predicting Next-Quarter Revenue and Profit Margin of U.S. Companies
 
-This Data Science Capstone Part 1 pitch proposes three research questions about U.S. public companies. All three use quarterly financial statements, with a different outcome for each question.
+*Using only what a company has already reported, can we estimate its revenue and profit margin for the next quarter?*
 
-## Question 1 — How will revenue change over the next four quarters?
+## The problem
 
-- **Problem statement** — Can recent financial results predict the amount and direction of year-over-year revenue change for each of the next four fiscal quarters?
-- **Audience** — Financial planning teams and equity research analysts who need a baseline forecast.
-- **Goal** — Build forecasts one to four quarters ahead for a subset of companies with complete revenue histories. Use lagged revenue and year-over-year growth as inputs. Use revenue from the same fiscal quarter in the previous year as the baseline.
-- **Success metrics** — Report median absolute percentage error and directional accuracy separately for each forecast horizon on held-out periods. Compare both with the seasonal baseline, which predicts flat year-over-year revenue. Report the number of zero or missing revenue observations excluded from percentage errors.
-- **Data source** — Public SEC EDGAR Company Facts JSON, using quarterly revenue from 10-Q and 10-K disclosures. Start with a subset of the 400-company panel and verify that each issuer's revenue definition is consistent across periods.
+Analysts and finance teams often need an estimate of a company's next quarter before the official report is published. This project tests whether a company's latest quarterly figures (revenue, profit, cash flow, assets, equity, cash) are enough to predict two things: next-quarter **revenue** and next-quarter **profit margin** (net income divided by revenue). A useful model must beat the simplest rule of thumb: "next quarter will look like this quarter."
 
-## Question 2 — Which companies are at risk of weakening financial stability?
+## Key result
 
-- **Problem statement** — Can liquidity, leverage, and cash flow ratios identify nonfinancial companies likely to show both negative trailing four-quarter operating cash flow and a current ratio below 1 within the next four quarters? This is a measurable proxy for financial strain.
-- **Audience** — Credit analysts and finance teams deciding which companies warrant closer review.
-- **Goal** — Build a risk ranking using current assets divided by current liabilities, debt relative to assets, and trailing operating cash flow relative to assets. Focus on companies that do not meet both strain conditions at the forecast date. Check outcome frequency before training and narrow the scope if too few cases are available for evaluation.
-- **Success metrics** — Compare average precision with a baseline that ranks companies by current ratio alone. Report precision and recall for the highest-risk 10% in held-out quarters. Evaluate only forecasts with four observable follow-up quarters.
-- **Data source** — Public SEC EDGAR Company Facts JSON for operating cash flow, current assets, current liabilities, total assets, and debt. Derive standalone cash flow quarters from cumulative figures only when the periods, accounting concepts, and units match. Retain both source filings.
+**Revenue is easy to predict; profit margin is not.** On the training data, this quarter's revenue and next quarter's revenue are almost perfectly correlated (r = 0.99, on a log scale), while for profit margin the correlation is only 0.60. In plain terms: a company's revenue barely moves from one quarter to the next, but its profit swings much more. The real challenge, and the benchmark every model must beat, is the "same as last quarter" baseline, especially for margin.
 
-## Question 3 — Will operating profitability improve or decline next quarter?
+![Revenue stays almost on the diagonal from one quarter to the next, while margin is widely scattered](docs/04_target_vs_current.png)
 
-- **Problem statement** — Can past margins and changes in revenue and operating costs predict next-quarter operating margin better than using the margin from the same quarter last year?
-- **Audience** — Corporate planning teams and analysts tracking whether sales growth translates into operating profit.
-- **Goal** — Forecast operating margin, defined as operating income divided by revenue, for companies in one sector. Use historical margins, revenue growth, and operating expense ratios where consistently reported. Restrict the analysis to quarters with positive revenue.
-- **Success metrics** — Compare mean absolute forecast error in percentage points against the same-quarter-last-year baseline. Report how often the model correctly predicts whether margin rises, falls, or stays flat year over year on held-out periods.
-- **Data source** — Public SEC EDGAR Company Facts JSON for operating income, revenue, and operating expenses. Use public SEC industry classifications to select a sector with adequate coverage.
+## The data
 
-## Data access and project boundaries
+- **Source:** [SEC EDGAR Company Facts API](https://www.sec.gov/search-filings/edgar-application-programming-interfaces), quarterly figures from 10-Q and 10-K filings. Public U.S. government data.
+- **Coverage:** 400 U.S.-listed companies (selected from an S&P 500 snapshot), quarters from 2018 to mid-2026; file built on 9 November 2026.
+- **Size:** 13,966 company-quarters and 66 columns in the raw file; **11,682 rows and 357 companies** after cleaning.
+- **In one sentence:** each row shows how much one company sold, earned and held in one quarter.
 
-The working panel covers 400 U.S.-listed companies selected from an S&P 500 snapshot, including Dow Jones members and Nasdaq-listed companies. These groups overlap. The panel starts in 2018 and includes 2026 filings available through November 9, 2026. Use actual company fiscal periods. Treat 2026 as partial coverage, and record missing disclosures as missing values. The sample favors companies with longer filing histories, so the findings apply to the selected cohort.
+**Main cleaning decisions:**
+- **Banks, brokers and insurers (30 companies) are excluded.** Their "revenue" means something different (interest and investment income), and in this download it is often missing or wrongly tagged. The model applies to **non-financial companies only**.
+- Revenue stored as text was converted to numbers; 33 zero or negative revenues were set to missing.
+- 403 quarters with margins outside -100% to +100% were set to missing (mostly bad revenue tags, but also real crises such as cruise lines in 2020–21, so the model has not seen the most extreme quarters).
+- Split **by time** before any analysis: train = quarters before 2025 (9,627 rows), test = 2025 onwards (2,055 rows). All EDA uses train only.
 
-SEC Company Facts is available as public JSON without an API key. Retrieve a company's data using its SEC Central Index Key (CIK), or use the prepared CSV for exploration. Automated requests must follow SEC access rules. The project uses public corporate financial figures only. Share the project's code, aggregate results, and links to the public sources. Before redistributing any third-party constituent list, verify its terms or omit it from the submission.
+How to obtain the data: see [data/README.md](data/README.md).
 
-Use the prepared panel to explore coverage. For all three questions, rebuild the modeling inputs from source facts using filing dates so each forecast uses information public at the time. Split chronologically, keep a final test period separate, and compare models and baselines on the same observations. For the four-quarter stability outcome, leave enough time between training and testing for all training outcomes to be observable before the test begins.
+## How to navigate this repo
 
-- [SEC EDGAR API documentation](https://www.sec.gov/search-filings/edgar-application-programming-interfaces)
-- [Example SEC Company Facts JSON — Apple](https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json)
-- [SEC automated access guidance](https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data)
-- [SEC industry classification codes](https://www.sec.gov/search-filings/standard-industrial-classification-sic-code-list)
-- [Course data requirements](https://github.com/juanatga/ga_capstone_guideline_dsb/blob/main/README.md#important-no-proprietary-private-or-sensitive-personal-data)
+Start here, then read [EDA](notebooks/01_eda.ipynb) (data checks, cleaning, findings), followed by [modelling](notebooks/02_modelling.ipynb) (models, comparison with the baseline, conclusions). Data instructions are in [data/](data/README.md); figures and slides are in [docs/](docs/README.md).
+
+## How to reproduce
+
+The raw data file is small enough to be included in `data/raw/`; no account or API key is needed.
+
+```bash
+git clone --branch tidy_project https://github.com/Danilop88/DSB_Cap.git
+cd DSB_Cap
+python -m pip install -r requirements.txt
+jupyter notebook
+```
+
+Run `01_eda.ipynb` first (it writes `data/processed/clean.csv` and `decisions.csv`), then `02_modelling.ipynb`, each from a fresh session. In Colab, first clone the repository, enter its folder and install requirements in a code cell (`!git clone ...`, `%cd DSB_Cap`, `%pip install -r requirements.txt`). Opening a badge alone does not copy the repository or its data.
+
+[![Open EDA in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Danilop88/DSB_Cap/blob/tidy_project/notebooks/01_eda.ipynb)
+[![Open modelling in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Danilop88/DSB_Cap/blob/tidy_project/notebooks/02_modelling.ipynb)
+
+## Repository structure
+
+```text
+README.md                  Public project story
+LICENSE                    Code license; data has separate terms
+requirements.txt           Packages and verified versions
+.gitignore                 Files to keep out of Git
+data/
+  README.md                Acquisition and file-size policy
+  raw/                     Original SEC panel (untouched) and provenance
+  processed/               clean.csv and decisions.csv, generated by EDA
+notebooks/
+  01_eda.ipynb             Explore, clean, document decisions, export
+  02_modelling.ipynb       Compare models with the naive baseline
+docs/                      Figures (01–05) and slides
+```
+
+## Author & credits
+
+Danilo Pavicevic, General Assembly Data Science Bootcamp, Capstone project.
+Data: U.S. Securities and Exchange Commission (SEC), EDGAR Company Facts. Libraries: pandas, NumPy, matplotlib, seaborn, scikit-learn.
+
+## License
+
+Code: MIT License, © 2026 Danilo Pavicevic. See [LICENSE](LICENSE).
+Data: SEC EDGAR data is public U.S. government information; use follows the [SEC access rules](https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data).
 
