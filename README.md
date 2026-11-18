@@ -10,13 +10,11 @@ Analysts and finance teams often need an estimate of a company's next quarter be
 
 **Revenue is easy to predict; profit margin is not.** On the training data, this quarter's revenue and next quarter's revenue are almost perfectly correlated (r = 0.99, on a log scale), while for profit margin the correlation is only 0.60. In plain terms: a company's revenue barely moves from one quarter to the next, but its profit swings much more. The real challenge, and the benchmark every model must beat, is the "same as last quarter" baseline, especially for margin.
 
-![Revenue stays almost on the diagonal from one quarter to the next, while margin is widely scattered](docs/04_target_vs_current.png)
-
 ## The data
 
 - **Source:** [SEC EDGAR Company Facts API](https://www.sec.gov/search-filings/edgar-application-programming-interfaces), quarterly figures from 10-Q and 10-K filings. Public U.S. government data.
 - **Coverage:** 400 U.S.-listed companies (selected from an S&P 500 snapshot), quarters from 2018 to mid-2026; file built on 9 November 2026.
-- **Size:** 13,966 company-quarters and 66 columns in the raw file; **11,682 rows and 357 companies** after cleaning.
+- **Size:** 13,966 company-quarters and 66 columns in the raw file (`kvartalni_podaci (2).csv`); **11,682 rows and 357 companies** after cleaning (`clean final.csv`).
 - **In one sentence:** each row shows how much one company sold, earned and held in one quarter.
 
 **Main cleaning decisions:**
@@ -25,43 +23,34 @@ Analysts and finance teams often need an estimate of a company's next quarter be
 - 403 quarters with margins outside -100% to +100% were set to missing (mostly bad revenue tags, but also real crises such as cruise lines in 2020–21, so the model has not seen the most extreme quarters).
 - Split **by time** before any analysis: train = quarters before 2025 (9,627 rows), test = 2025 onwards (2,055 rows). All EDA uses train only.
 
-How to obtain the data: see [data/README.md](data/README.md).
+How to obtain the data: the raw file `kvartalni_podaci (2).csv` is included in this repository; the cleaned file `clean final.csv` is produced by the EDA notebook.
 
 ## How to navigate this repo
 
-Start here, then read [EDA](notebooks/01_eda.ipynb) (data checks, cleaning, findings), followed by [modelling](notebooks/02_modelling.ipynb) (models, comparison with the baseline, conclusions). Data instructions are in [data/](data/README.md); figures and slides are in [docs/](docs/README.md).
+Start here, then read the [EDA notebook](01_EDA_clean%20final.ipynb) (data checks, cleaning, findings). The raw data is in [`kvartalni_podaci (2).csv`](kvartalni_podaci%20(2).csv) and the cleaned data, exported after EDA, is in [`clean final.csv`](clean%20final.csv).
 
 ## How to reproduce
 
-The raw data file is small enough to be included in `data/raw/`; no account or API key is needed.
+The raw data file `kvartalni_podaci (2).csv` is small enough to be included in the repository root; no account or API key is needed.
 
 ```bash
-git clone --branch tidy_project https://github.com/Danilop88/DSB_Cap.git
+git clone https://github.com/Danilop88/DSB_Cap.git
 cd DSB_Cap
-python -m pip install -r requirements.txt
+python -m pip install pandas numpy matplotlib seaborn scikit-learn jupyter
 jupyter notebook
 ```
 
-Run `01_eda.ipynb` first (it writes `data/processed/clean.csv` and `decisions.csv`), then `02_modelling.ipynb`, each from a fresh session. In Colab, first clone the repository, enter its folder and install requirements in a code cell (`!git clone ...`, `%cd DSB_Cap`, `%pip install -r requirements.txt`). Opening a badge alone does not copy the repository or its data.
+Open `01_EDA_clean final.ipynb` and run it from a fresh session: it reads the raw `kvartalni_podaci (2).csv` and exports the cleaned `clean final.csv`. In Colab, first clone the repository, enter its folder and install the packages in a code cell (`!git clone ...`, `%cd DSB_Cap`, `%pip install pandas numpy matplotlib seaborn scikit-learn`). Opening the badge alone does not copy the repository or its data.
 
-[![Open EDA in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Danilop88/DSB_Cap/blob/tidy_project/notebooks/01_eda.ipynb)
-[![Open modelling in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Danilop88/DSB_Cap/blob/tidy_project/notebooks/02_modelling.ipynb)
+[![Open EDA in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Danilop88/DSB_Cap/blob/main/01_EDA_clean%20final.ipynb)
 
 ## Repository structure
 
 ```text
-README.md                  Public project story
-LICENSE                    Code license; data has separate terms
-requirements.txt           Packages and verified versions
-.gitignore                 Files to keep out of Git
-data/
-  README.md                Acquisition and file-size policy
-  raw/                     Original SEC panel (untouched) and provenance
-  processed/               clean.csv and decisions.csv, generated by EDA
-notebooks/
-  01_eda.ipynb             Explore, clean, document decisions, export
-  02_modelling.ipynb       Compare models with the naive baseline
-docs/                      Figures (01–05) and slides
+README.md                    Public project story
+01_EDA_clean final.ipynb     EDA notebook: explore, clean, document decisions, export
+kvartalni_podaci (2).csv     Raw quarterly data from SEC EDGAR (untouched)
+clean final.csv              Clean data, exported after EDA
 ```
 
 ## Author & credits
@@ -71,6 +60,6 @@ Data: U.S. Securities and Exchange Commission (SEC), EDGAR Company Facts. Librar
 
 ## License
 
-Code: MIT License, © 2026 Danilo Pavicevic. See [LICENSE](LICENSE).
+Code: MIT License, © 2026 Danilo Pavicevic.
 Data: SEC EDGAR data is public U.S. government information; use follows the [SEC access rules](https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data).
 
