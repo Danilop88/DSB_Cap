@@ -57,6 +57,7 @@ clean final.csv              Clean data, exported after EDA
 
 Danilo Pavicevic, General Assembly Data Science Bootcamp, Capstone project.
 Data: U.S. Securities and Exchange Commission (SEC), EDGAR Company Facts. Libraries: pandas, NumPy, matplotlib, seaborn, scikit-learn.
+Links to every library, the General Assembly course code each step follows, and the data sources are in the Appendix at the end of each notebook ([EDA](01_EDA_clean%20final.ipynb), section 9; [modelling](02_modelling_.ipynb), section 13).
 
 ## License
 
