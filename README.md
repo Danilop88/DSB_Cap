@@ -62,6 +62,7 @@ Test MAE on 2,055 company-quarters from 2025 to mid-2026 (change vs naive persis
 
 - **Gradient Boosting is the final model for both targets**, chosen by train CV and confirmed on test; CV and test rank the three models the same way.
 - All three models beat persistence in every test quarter.
+- **Feature engineering matters more than the model:** without the 5 history features, default Gradient Boosting beats persistence in CV by only 1.6% (revenue) and 8.0% (margin); with them by 11.0% and 15.0%.
 - For margin, R² rises from 0.15 (persistence) to 0.51; 63% of Gradient Boosting revenue predictions are within about 5% of actual revenue (48% for persistence).
 
 ## 6. Findings
@@ -74,7 +75,7 @@ Test MAE on 2,055 company-quarters from 2025 to mid-2026 (change vs naive persis
 
 - Non-financial companies only; large U.S. listed companies only (results may not hold for small, private or non-U.S. firms).
 - Survivorship bias: a recent company list, so failed or delisted firms are missing.
-- The most extreme quarters were removed, so the model will underestimate real crises.
+- The most extreme quarters (margins outside ±100%) were removed from both train and test, so the model will underestimate real crises and the test MAE does not cover them.
 - Short test period (about six quarters); tuning CV scores are slightly optimistic, the test MAE is the honest number.
 - Only accounting data. Predictions should support an analyst's judgement, not replace it in credit, investment or audit decisions.
 
